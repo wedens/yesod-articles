@@ -1,0 +1,4 @@
+<h1> Edit article
+<form role=form method=post enctype=#{enctype} action=@{ArticleR articleId}?_method=PUT>
+  ^{articleWidget}
+  <button type=submit .btn .btn.default>Edit

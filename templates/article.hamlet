@@ -1,0 +1,9 @@
+<div .row>
+  <div .col-lg-8>
+    <h1>#{articleTitle article}
+    <hr>
+    <p><span class="glyphicon glyphicon-time"></span> Posted on #{prettyTime (articlePostedAt article)}
+    <hr>
+    <p>#{articleContent article}
+    $if canEdit
+      <a .btn .btn-default href=@{EditArticleR articleId}> Edit

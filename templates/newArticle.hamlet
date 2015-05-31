@@ -1,0 +1,4 @@
+<h1> New article
+<form role=form method=post enctype=#{enctype} action=@{ArticlesR}>
+  ^{articleWidget}
+  <button type=submit .btn .btn.default>Post

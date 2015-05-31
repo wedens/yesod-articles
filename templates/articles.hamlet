@@ -1,0 +1,25 @@
+<div .row>
+  <div .col-md-8>
+    <h1 .page-header>Articles
+    $if null articles
+      <p> There are no articles
+    $else
+      $forall Entity articleId article <- articles
+        <h2>#{articleTitle article}
+        <hr>
+        <p><span class="glyphicon glyphicon-time"></span> Posted on #{prettyTime (articlePostedAt article)}
+        <hr>
+        <p>#{articleContent article}
+        <a .btn .btn-default href=@{ArticleR articleId}>Read more <span class="glyphicon glyphicon-chevron-right"></span>
+        <hr>
+
+    <nav>
+      <ul .pager>
+        $if page > 1
+          <li .previous>
+            <a href=@{ArticlesR}?page=#{page - 1}><span aria-hidden="true">&larr;</span> Newer 
+        $if page < pagesCount
+          <li .next>
+            <a href=@{ArticlesR}?page=#{page + 1}>Older <span aria-hidden="true">&rarr;</span>
+
+    <a .btn .btn-primary href=@{NewArticleR}>New article <span class="glyphicon glyphicon-pencil"></span>
