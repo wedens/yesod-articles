@@ -31,4 +31,4 @@ getEditArticleR articleId = do
     $(widgetFile "editArticle")
 
 articleToData :: Article -> ArticleData
-articleToData a@Article{..} = ArticleData articleTitle articleContent
+articleToData Article{..} = ArticleData articleTitle articleContent

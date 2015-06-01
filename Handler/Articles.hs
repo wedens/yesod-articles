@@ -2,6 +2,8 @@ module Handler.Articles where
 
 import Import
 import Handler.NewArticle (articleForm, ArticleData(..))
+import Data.Text (splitOn)
+import qualified Database.Esqueleto as E
 
 articlesPageSize :: Int
 articlesPageSize = 2
@@ -11,18 +13,18 @@ getArticlesR = do
   page <- getPageFromRequest
   (articles, pagesCount) <- runDB $ fetchArticlesPage page articlesPageSize
   selectRep $ do
-    provideRep $ defaultLayout $ do
+    provideRep . defaultLayout $ do
       setTitle "articles"
       $(widgetFile "articles")
     provideJson articles
 
 getPageFromRequest :: MonadHandler m => m Int
-getPageFromRequest = liftM (\p -> fromMaybe 1 (readIntegral . unpack =<< p)) $ lookupGetParam "page"
+getPageFromRequest = (\p -> fromMaybe 1 (readIntegral . unpack =<< p)) <$> lookupGetParam "page"
 
 fetchArticlesPage :: Int -> Int -> YesodDB App ([Entity Article], Int)
 fetchArticlesPage page pageSize = do
   articlesCount <- count ([] :: [Filter Article])
-  let pagesCount = (\(n, r) -> n + (min r 1)) $ articlesCount `divMod` pageSize
+  let pagesCount = (\(n, r) -> n + min r 1) $ articlesCount `divMod` pageSize
   articles <- selectList [] [ Desc ArticlePostedAt
                             , OffsetBy ((page - 1) * pageSize)
                             , LimitTo pageSize
@@ -36,15 +38,15 @@ postArticlesR = do
   ((res, articleWidget), enctype) <- runFormPost $ articleForm Nothing
   case res of
     FormSuccess articleData -> do
-      articleId <- runDB $ insert $ createArticle articleData now currentUserId
-      setMessage $ "New article created"
+      articleId <- runDB . insert $ createArticle articleData now currentUserId
+      setMessage "New article created"
       redirect $ ArticleR articleId
     _ -> defaultLayout $ do
       setTitle "Please correct your article"
       $(widgetFile "newArticle")
 
 createArticle :: ArticleData -> UTCTime -> UserId -> Article
-createArticle ArticleData{..} ts author = Article articleDataTitle articleDataContent ts author
+createArticle ArticleData{..} = Article articleDataTitle articleDataContent
 
 getArticlesFeedR :: Handler TypedContent
 getArticlesFeedR = do
@@ -61,8 +63,8 @@ getArticlesFeedR = do
     }
   where
     articleToFeedEntry (Entity aid a) = FeedEntry
-                                        { feedEntryLink = ArticleR aid
-                                        , feedEntryUpdated = articlePostedAt a
-                                        , feedEntryTitle = articleTitle a
-                                        , feedEntryContent = toHtml $ articleContent a
-                                        }
+        { feedEntryLink = ArticleR aid
+        , feedEntryUpdated = articlePostedAt a
+        , feedEntryTitle = articleTitle a
+        , feedEntryContent = toHtml $ articleContent a
+        }
