@@ -2,7 +2,7 @@ module Handler.Article where
 
 import Import
 import Handler.NewArticle (articleForm, ArticleData(..))
-import Data.Text (splitOn)
+-- import Data.Text (splitOn)
 
 getArticleR :: ArticleId -> Handler TypedContent
 getArticleR articleId = do

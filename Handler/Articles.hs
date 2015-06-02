@@ -2,8 +2,8 @@ module Handler.Articles where
 
 import Import
 import Handler.NewArticle (articleForm, ArticleData(..))
-import Data.Text (splitOn)
-import qualified Database.Esqueleto as E
+-- import Data.Text (splitOn)
+-- import qualified Database.Esqueleto as E
 
 articlesPageSize :: Int
 articlesPageSize = 2
