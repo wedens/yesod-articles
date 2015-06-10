@@ -2,11 +2,14 @@ module Handler.Article where
 
 import Import
 import Handler.NewArticle (articleForm, ArticleData(..))
--- import Data.Text (splitOn)
+import Handler.Articles (tagsFromArticleData)
+import qualified Data.Text as T
 
 getArticleR :: ArticleId -> Handler TypedContent
 getArticleR articleId = do
-  article <- runDB $ get404 articleId
+  (article, tags) <- runDB $ (,)
+    <$> get404 articleId
+    <*> selectList [ TagArticle ==. articleId ] []
   currentUserId <- maybeAuthId
   let canEdit = isAuthorizedToEdit currentUserId article
   selectRep $ do
@@ -24,16 +27,19 @@ putArticleR articleId = do
   article <- runDB $ get404 articleId
   currentUserId <- requireAuthId
   unless (isAuthorizedToEdit (Just currentUserId) article) $
-    permissionDenied "Not authorized to edit this article"
+    permissionDenied "You're not authorized to edit this article"
   ((res, articleWidget), enctype) <- runFormPost $ articleForm Nothing
   case res of
     FormSuccess articleData -> do
-      runDB $ update articleId [ ArticleTitle =. articleDataTitle articleData
-                               , ArticleContent =. articleDataContent articleData
-                               ]
+      let tags = tagsFromArticleData articleId articleData
+      runDB $ do
+        deleteWhere [ TagArticle ==. articleId ]
+        insertMany_ tags
+        update articleId [ ArticleTitle   =. articleDataTitle articleData
+                         , ArticleContent =. articleDataContent articleData
+                         ]
       setMessage "Article edited"
       redirect $ ArticleR articleId
     _ -> defaultLayout $ do
       setTitle "Edit article"
       $(widgetFile "editArticle")
-

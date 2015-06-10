@@ -6,6 +6,7 @@ import Database.Persist.Quasi
 import Text.Markdown
 import Yesod.Text.Markdown ()
 import Yesod.Auth.HashDB (HashDBUser(..))
+import Model.Types
 
 -- You can define all of your database entities in the entities file.
 -- You can find more information on persistent and how to declare entities

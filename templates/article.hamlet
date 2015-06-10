@@ -3,6 +3,10 @@
     <h1>#{articleTitle article}
     <hr>
     <p><span class="glyphicon glyphicon-time"></span> Posted on #{prettyTime (articlePostedAt article)}
+    <p>
+      <span class="glyphicon glyphicon-tags"></span> Tags:
+      $forall Entity _ tag <- tags
+        <a href=@{ByTagR (tagSlug tag)}><span class="badge badge-indo">#{tagName tag}</span>
     <hr>
     <p>#{articleContent article}
     $if canEdit

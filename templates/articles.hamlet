@@ -1,13 +1,18 @@
 <div .row>
   <div .col-md-8>
     <h1 .page-header>Articles
-    $if null articles
+    $if null articlesWithTags
       <p> There are no articles
     $else
-      $forall Entity articleId article <- articles
+      $forall (Entity articleId article, tags) <- articlesWithTags
         <h2>#{articleTitle article}
         <hr>
         <p><span class="glyphicon glyphicon-time"></span> Posted on #{prettyTime (articlePostedAt article)}
+
+        <p>
+          <span class="glyphicon glyphicon-tags"></span> Tags:
+          $forall Entity _ tag <- tags
+            <a href="#"><span class="badge badge-indo">#{tagName tag}</span>
         <hr>
         <p>#{articleContent article}
         <a .btn .btn-default href=@{ArticleR articleId}>Read more <span class="glyphicon glyphicon-chevron-right"></span>
@@ -22,4 +27,5 @@
           <li .next>
             <a href=@{ArticlesR}?page=#{page + 1}>Older <span aria-hidden="true">&rarr;</span>
 
-    <a .btn .btn-primary href=@{NewArticleR}>New article <span class="glyphicon glyphicon-pencil"></span>
+    $if canCreateArticles
+      <a .btn .btn-primary href=@{NewArticleR}>New article <span class="glyphicon glyphicon-pencil"></span>

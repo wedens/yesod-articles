@@ -10,6 +10,7 @@
 /articles/new NewArticleR GET
 /articles/!#ArticleId ArticleR GET PUT
 /articles/!#ArticleId/edit EditArticleR GET
+/articles/tag/#Slug ByTagR GET
 
 /signup SignUpR GET POST
 

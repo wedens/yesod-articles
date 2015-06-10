@@ -38,5 +38,6 @@ getEditArticleR articleId = do
 articleToData :: [Tag] -> Article -> ArticleData
 articleToData tags Article{..} = ArticleData articleTitle articleContent (Just $ tagsToText tags)
 
+
 tagsToText :: [Tag] -> Text
 tagsToText = T.intercalate "," . fmap tagName

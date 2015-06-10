@@ -8,6 +8,7 @@ import Yesod.Default.Util   (addStaticContentExternal)
 import Yesod.Core.Types     (Logger)
 import Yesod.Auth.HashDB    (authHashDBWithForm)
 import qualified Yesod.Core.Unsafe as Unsafe
+import Model.Types
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
