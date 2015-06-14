@@ -12,7 +12,7 @@
         <p>
           <span class="glyphicon glyphicon-tags"></span> Tags:
           $forall Entity _ tag <- tags
-            <a href="#"><span class="badge badge-indo">#{tagName tag}</span>
+            <a href=@{ByTagR (tagSlug tag)}><span class="badge badge-indo">#{tagName tag}</span>
         <hr>
         <p>#{articleContent article}
         <a .btn .btn-default href=@{ArticleR articleId}>Read more <span class="glyphicon glyphicon-chevron-right"></span>

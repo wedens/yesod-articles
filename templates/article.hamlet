@@ -11,3 +11,23 @@
     <p>#{articleContent article}
     $if canEdit
       <a .btn .btn-default href=@{EditArticleR articleId}> Edit
+
+    $if canComment
+      <hr>
+      <div .well>
+        <h4><i .fa .fa-paper-plane-o></i> Leave a Comment:
+        <form role=form method=post action=@{CommentsR articleId}>
+            <div .form-group>
+            <textarea .form-control rows="3" name="content">
+            <button type="submit" .btn .btn-primary><i class="fa fa-reply"></i> Submit
+
+    <hr>
+
+    $forall (Entity commentId comment, Entity _ commentAuthor) <- comments
+      <div .media>
+        <!-- <a class="pull-left" href="#"> -->
+        <!--   <img class="media-object" src="http://placehold.it/64x64" alt=""> -->
+        <div .media-body id=#{commentAnchorId commentId}>
+          <h4 .media-heading>#{userIdent commentAuthor}
+            <a href="@{ArticleR articleId}##{commentAnchorId commentId}"><small> #{prettyTime (commentPostedAt comment)}</small>
+          #{commentContent comment}

@@ -3,20 +3,32 @@ module Handler.Article where
 import Import
 import Handler.NewArticle (articleForm, ArticleData(..))
 import Handler.Articles (tagsFromArticleData)
-import qualified Data.Text as T
+import Handler.Comments (commentAnchorId)
+import qualified Database.Esqueleto as E
+import           Database.Esqueleto      ((^.))
 
 getArticleR :: ArticleId -> Handler TypedContent
 getArticleR articleId = do
-  (article, tags) <- runDB $ (,)
+  (article, tags, comments) <- runDB $ (,,)
     <$> get404 articleId
     <*> selectList [ TagArticle ==. articleId ] []
+    <*> fetchComments articleId
   currentUserId <- maybeAuthId
   let canEdit = isAuthorizedToEdit currentUserId article
+  let canComment = isJust currentUserId
   selectRep $ do
     provideRep . defaultLayout $ do
       setTitle . toHtml $ articleTitle article
       $(widgetFile "article")
     provideJson article
+    
+
+fetchComments :: ArticleId -> YesodDB App ([(Entity Comment, Entity User)])
+fetchComments articleId =
+    E.select $ E.from $ \(c `E.InnerJoin` u) -> do
+    E.on (c ^. CommentAuthor E.==. u ^. UserId)
+    E.where_ (c ^. CommentArticle E.==. E.val articleId)
+    return (c,  u)
 
 isAuthorizedToEdit :: Maybe UserId -> Article -> Bool
 isAuthorizedToEdit userId article =

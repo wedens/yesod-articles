@@ -28,8 +28,7 @@ getPageFromRequest = (\p -> fromMaybe 1 (readIntegral . unpack =<< p)) <$> looku
 
 fetchArticlesPage :: Int -> Int -> YesodDB App ([(Entity Article, [Entity Tag])], Int)
 fetchArticlesPage page pageSize = do
-  articlesCount <- count ([] :: [Filter Article])
-  let pagesCount = (\(n, r) -> n + min r 1) $ articlesCount `divMod` pageSize
+  pagesCount <- countPages pageSize ([] :: [Filter Article])
   articles <- selectList [] [ Desc ArticlePostedAt
                             , OffsetBy ((page - 1) * pageSize)
                             , LimitTo pageSize
@@ -41,30 +40,26 @@ fetchArticlesPage page pageSize = do
 
 fetchArticlesPageByTag :: Int -> Int -> Slug -> YesodDB App ([(Entity Article, [Entity Tag])], Int)
 fetchArticlesPageByTag page pageSize slug = do
-  articlesWithTagCount <- count [ TagSlug ==. slug ]
-  let pagesCount = (\(n, r) -> n + min r 1) $ articlesWithTagCount `divMod` pageSize
-  articleTags <- selectList [ TagSlug ==. slug ] [ Desc TagId
-                                       , OffsetBy ((page - 1) * pageSize)
-                                       , LimitTo pageSize
-                                       ]
-  articles <- selectList [ ArticleId <-. ((tagArticle . entityVal) <$> articleTags) ] [ Desc ArticlePostedAt ]
+  pagesCount <- countPages pageSize [ TagSlug ==. slug ]
+  let offset = (page - 1) * pageSize
+  let offset' = fromIntegral offset :: Int64
+  let pageSize' = fromIntegral pageSize :: Int64
+  articles <- E.select $ E.from $ \(article `E.InnerJoin` tag) -> do
+    E.on $ article ^. ArticleId E.==. tag ^. TagArticle
+    E.where_ $ tag ^. TagSlug E.==. E.val slug
+    E.orderBy [E.desc (article ^. ArticlePostedAt)]
+    E.offset $ offset'
+    E.limit $ pageSize'
+    return article
   let articleIds = entityKey <$> articles
   tags <- selectList [ TagArticle <-. articleIds ] []
   let articlesWithTags = pairArticlesWithTags articles tags
   return (articlesWithTags, pagesCount)
 
-fetchArticlesPageByTag2 :: Int -> Int -> Slug -> YesodDB App ([(Entity Article, [Entity Tag])], Int)
-fetchArticlesPageByTag2 page pageSize slug = do
-  articlesWithTagCount <- count [ TagSlug ==. slug ]
-  let pagesCount = (\(n, r) -> n + min r 1) $ fromIntegral (articlesWithTagCount `divMod` pageSize) :: Int64
-  articles <- E.select $ E.from $ \(article `E.InnerJoin` tag) -> do
-    E.on $ article ^. ArticleId E.==. tag ^. TagArticle
-    E.where_ $ tag ^. TagSlug E.==. E.val slug
-    E.orderBy [E.desc (article ^. ArticlePostedAt)]
-    E.offset $ E.val $ fromIntegral ((page - 1) * pageSize) :: Int64
-    E.limit $ fromIntegral pageSize :: Int64
-    return article
-  error ""
+
+countPages :: (PersistEntity val, PersistEntityBackend val ~ SqlBackend) => Int -> [Filter val] -> YesodDB App Int
+countPages pageSize filters =
+  ((\(n, r) -> n + min r 1) . (flip divMod pageSize)) <$> count filters
 
 pairArticlesWithTags :: [Entity Article] -> [Entity Tag] -> [(Entity Article, [Entity Tag])]
 pairArticlesWithTags articles tags =

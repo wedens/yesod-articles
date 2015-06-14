@@ -26,6 +26,7 @@ library
                      Handler.Article
                      Handler.Articles
                      Handler.User
+                     Handler.Comments
                      Model.Types
 
     if flag(dev) || flag(library-only)

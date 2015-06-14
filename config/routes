@@ -11,6 +11,7 @@
 /articles/!#ArticleId ArticleR GET PUT
 /articles/!#ArticleId/edit EditArticleR GET
 /articles/tag/#Slug ByTagR GET
+/articles/!#ArticleId/comments CommentsR POST
 
 /signup SignUpR GET POST
 

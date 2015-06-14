@@ -18,4 +18,11 @@ Tag
     name Text
     slug Slug
 
+Comment
+    article ArticleId
+    author UserId
+    content Markdown
+    postedAt UTCTime
+    modifiedAt UTCTime Maybe
+
  -- By default this file is used in Model.hs (which is imported by Foundation.hs)
