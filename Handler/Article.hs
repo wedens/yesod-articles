@@ -21,14 +21,13 @@ getArticleR articleId = do
       setTitle . toHtml $ articleTitle article
       $(widgetFile "article")
     provideJson article
-    
 
 fetchComments :: ArticleId -> YesodDB App ([(Entity Comment, Entity User)])
 fetchComments articleId =
     E.select $ E.from $ \(c `E.InnerJoin` u) -> do
     E.on (c ^. CommentAuthor E.==. u ^. UserId)
     E.where_ (c ^. CommentArticle E.==. E.val articleId)
-    return (c,  u)
+    return (c, u)
 
 isAuthorizedToEdit :: Maybe UserId -> Article -> Bool
 isAuthorizedToEdit userId article =
