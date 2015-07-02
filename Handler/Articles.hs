@@ -1,8 +1,11 @@
+{-# LANGUAGE ScopedTypeVariables#-}
 module Handler.Articles where
 
 import Import
 import Handler.NewArticle (articleForm, ArticleData(..))
 import Data.Text (splitOn)
+import Database.Persist.Sql (Single(..), rawSql, unSingle)
+import Text.Shakespeare.Text (st)
 
 import Model.Types
 import qualified Database.Esqueleto as E
@@ -25,6 +28,46 @@ getArticlesR = do
 
 getPageFromRequest :: MonadHandler m => m Int
 getPageFromRequest = (\p -> fromMaybe 1 (readIntegral . unpack =<< p)) <$> lookupGetParam "page"
+
+getSearchR :: Handler Html
+getSearchR = do
+  page <- getPageFromRequest
+  query<- runInputGet $ ireq textField "query"
+  currentUserId <- maybeAuthId
+  let canCreateArticles = isJust currentUserId
+  (articlesWithTags, pagesCount) <- runDB $ searchArticles query page articlesPageSize
+  defaultLayout $ $(widgetFile "articles")
+
+q :: Text
+q = [st|
+    WITH q AS (SELECT plainto_tsquery(?))
+    SELECT ??
+    FROM article
+    WHERE fulltext @@ (SELECT * FROM q)
+    ORDER BY ts_rank_cd(fulltext, (SELECT * FROM q)) DESC
+    OFFSET ?
+    LIMIT ?
+    |]
+
+q2 :: Text
+q2 = [st|
+     WITH q AS (SELECT plainto_tsquery(?))
+     SELECT COUNT(1)
+     FROM article WHERE fulltext @@ (SELECT * FROM q)
+     |]
+
+searchArticles :: Text -> Int -> Int -> YesodDB App ([(Entity Article, [Entity Tag])], Int)
+searchArticles query page pageSize = do
+  total :: [Single Int] <- rawSql q2 [toPersistValue query]
+  let (x : []) = total
+  let y = unSingle x
+  let pagesCount = ((\(n, r) -> n + min r 1) . (flip divMod pageSize)) y
+  let offset = (page - 1) * pageSize
+  articles :: [Entity Article] <- rawSql q [toPersistValue query, toPersistValue offset, toPersistValue pageSize]
+  let articleIds = entityKey <$> articles
+  tags <- selectList [ TagArticle <-. articleIds ] []
+  let articlesWithTags = pairArticlesWithTags articles tags
+  return (articlesWithTags, pagesCount)
 
 fetchArticlesPage :: Int -> Int -> YesodDB App ([(Entity Article, [Entity Tag])], Int)
 fetchArticlesPage page pageSize = do
@@ -124,3 +167,5 @@ getArticlesFeedR = do
         , feedEntryTitle = articleTitle a
         , feedEntryContent = toHtml $ articleContent a
         }
+
+

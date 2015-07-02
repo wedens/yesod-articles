@@ -3,6 +3,8 @@ module Model where
 
 import ClassyPrelude.Yesod
 import Database.Persist.Quasi
+import Database.Persist
+import Database.Persist.Postgresql
 import Text.Markdown
 import Yesod.Text.Markdown ()
 import Yesod.Auth.HashDB (HashDBUser(..))

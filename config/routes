@@ -12,6 +12,7 @@
 /articles/!#ArticleId/edit EditArticleR GET
 /articles/tag/#Slug ByTagR GET
 /articles/!#ArticleId/comments CommentsR POST
+/articles/search SearchR GET
 
 /signup SignUpR GET POST
 
